@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino/components/prompt"
@@ -127,48 +129,96 @@ func (t *TechnicalAnalysisMaster) Analyze(ctx context.Context, question string, 
 	}
 }
 
-// 读取网页内容
+// 增强版内容提取
 func extractMainContent(url string) string {
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Println("获取网页失败:", err)
-		return ""
-	}
-	defer resp.Body.Close()
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		log.Println("解析网页失败:", err)
-		return ""
+	client := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: &http.Transport{DisableKeepAlives: true},
 	}
 
-	// 优先查找 <article> 或 <main>，这些通常是文章正文
-	var contentBuilder strings.Builder
-	doc.Find("article, main").Each(func(i int, selection *goquery.Selection) {
-		selection.Find("p").Each(func(j int, p *goquery.Selection) {
-			text := strings.TrimSpace(p.Text())
-			if len(text) > 50 { // 过滤掉过短无意义内容
-				contentBuilder.WriteString(text + "\n")
+	var resp *http.Response
+	var err error
+
+	// 重试逻辑
+	for retry := 0; retry < 3; retry++ {
+		resp, err = client.Get(url)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			break
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		time.Sleep(time.Duration(retry+1) * 500 * time.Millisecond)
+	}
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return ""
+	}
+
+	// 智能内容提取
+	doc, _ := goquery.NewDocumentFromReader(resp.Body)
+	content := findMainContent(doc)
+	return strings.TrimSpace(content)
+}
+
+func findMainContent(doc *goquery.Document) string {
+	// 优先查找标准语义标签
+	selectors := []string{
+		"article", "main", "[role='main']",
+		".post-content", ".article-body",
+		"#content", "#main-content",
+	}
+
+	for _, selector := range selectors {
+		if content := extractBySelector(doc, selector); content != "" {
+			return content
+		}
+	}
+
+	// 回退策略：查找最长文本块
+	var maxLength int
+	var mainContent string
+	doc.Find("div, section").Each(func(_ int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+		if len(text) > maxLength {
+			maxLength = len(text)
+			mainContent = text
+		}
+	})
+	return mainContent
+}
+
+func extractBySelector(doc *goquery.Document, selector string) string {
+	var content strings.Builder
+	doc.Find(selector).Each(func(_ int, s *goquery.Selection) {
+		s.Find("p, li, pre").Each(func(_ int, el *goquery.Selection) {
+			text := strings.TrimSpace(el.Text())
+			if len(text) > 50 {
+				content.WriteString(text + "\n")
 			}
 		})
 	})
+	return content.String()
+}
 
-	// 如果未找到正文，则回退到查找所有 <p> 标签
-	if contentBuilder.Len() == 0 {
-		doc.Find("p").Each(func(i int, p *goquery.Selection) {
-			text := strings.TrimSpace(p.Text())
-			if len(text) > 50 {
-				contentBuilder.WriteString(text + "\n")
-			}
-		})
+// 用户交互
+func getMultilineInput() string {
+	fmt.Println("\n请输入技术问题（输入空行结束）:")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	var lines []string
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			break
+		}
+		lines = append(lines, line)
 	}
 
-	// 移除多余空行
-	mainContent := strings.TrimSpace(contentBuilder.String())
-	if mainContent == "" {
-		log.Println("未找到有效正文内容")
+	if len(lines) == 0 {
+		return ""
 	}
-	return mainContent
+	return strings.Join(lines, "\n")
 }
 
 func main() {
@@ -195,16 +245,15 @@ func main() {
 	}
 
 	for {
-		fmt.Print("\n请输入技术命题（输入 exit 退出）: ")
-		var input string
-		if _, err := fmt.Scanln(&input); err != nil {
-			log.Println("输入读取错误:", err)
+		input := getMultilineInput()
+		if input == "" {
 			continue
 		}
 		if input == "exit" {
 			break
 		}
 
+		fmt.Println("正在搜索相关资料，请稍候...")
 		// 创建 DuckDuckGo 搜索工具
 		config := &duckduckgo.Config{
 			MaxResults: 3,
@@ -250,6 +299,7 @@ func main() {
 			}
 		}
 
+		fmt.Println("正在分析，请稍候...")
 		response, err := master.Analyze(ctx, input, sources)
 		if err != nil {
 			log.Println("\n分析失败:", err)
