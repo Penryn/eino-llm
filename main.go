@@ -6,20 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"github.com/cloudwego/eino-ext/components/document/loader/url"
+	"github.com/cloudwego/eino-ext/components/model/openai"
 	"github.com/cloudwego/eino-ext/components/tool/duckduckgo"
 	"github.com/cloudwego/eino-ext/components/tool/duckduckgo/ddgsearch"
+	"github.com/cloudwego/eino/components/document"
+	"github.com/cloudwego/eino/components/prompt"
+	"github.com/cloudwego/eino/schema"
 	"github.com/joho/godotenv"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strings"
-	"time"
-
-	"github.com/cloudwego/eino-ext/components/model/openai"
-	"github.com/cloudwego/eino/components/prompt"
-	"github.com/cloudwego/eino/schema"
 )
 
 // 模型基本信息
@@ -44,8 +42,8 @@ var (
 【回答要求】请按以下结构回答：
 1. 核心考点解析
 2. 真实企业面试案例
-3. 面试官深入追问方向
-4. 最优回答策略与示例`
+3. 最优回答策略与示例
+4. 面试官深入追问方向`
 )
 
 // 示例技术问答对
@@ -54,11 +52,11 @@ var Examples = []*schema.Message{
 	schema.AssistantMessage(
 		`1. 核心考点：缓存雪崩指大量缓存同时过期导致数据库压力骤增。
 2. 面试案例：某电商平台秒杀活动大量缓存过期，导致数据库 QPS 飙升。
-3. 深入追问：如何避免热点 key 失效？如何设计分布式缓存架构？
-4. 最优解法：
+3. 最优解法：
    - 过期时间加随机值避免集中失效
    - 使用双写模式确保数据一致性
-   - 结合 Hystrix 进行熔断降级`, nil),
+   - 结合 Hystrix 进行熔断降级
+4. 深入追问：如何避免热点 key 失效？如何设计分布式缓存架构？`, nil),
 }
 
 type TechnicalAnalysisMaster struct {
@@ -127,77 +125,6 @@ func (t *TechnicalAnalysisMaster) Analyze(ctx context.Context, question string, 
 		fmt.Print(resp.Content)
 		fullResponse.WriteString(resp.Content)
 	}
-}
-
-// 增强版内容提取
-func extractMainContent(url string) string {
-	client := &http.Client{
-		Timeout:   30 * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: true},
-	}
-
-	var resp *http.Response
-	var err error
-
-	// 重试逻辑
-	for retry := 0; retry < 3; retry++ {
-		resp, err = client.Get(url)
-		if err == nil && resp.StatusCode == http.StatusOK {
-			break
-		}
-		if resp != nil {
-			resp.Body.Close()
-		}
-		time.Sleep(time.Duration(retry+1) * 500 * time.Millisecond)
-	}
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return ""
-	}
-
-	// 智能内容提取
-	doc, _ := goquery.NewDocumentFromReader(resp.Body)
-	content := findMainContent(doc)
-	return strings.TrimSpace(content)
-}
-
-func findMainContent(doc *goquery.Document) string {
-	// 优先查找标准语义标签
-	selectors := []string{
-		"article", "main", "[role='main']",
-		".post-content", ".article-body",
-		"#content", "#main-content",
-	}
-
-	for _, selector := range selectors {
-		if content := extractBySelector(doc, selector); content != "" {
-			return content
-		}
-	}
-
-	// 回退策略：查找最长文本块
-	var maxLength int
-	var mainContent string
-	doc.Find("div, section").Each(func(_ int, s *goquery.Selection) {
-		text := strings.TrimSpace(s.Text())
-		if len(text) > maxLength {
-			maxLength = len(text)
-			mainContent = text
-		}
-	})
-	return mainContent
-}
-
-func extractBySelector(doc *goquery.Document, selector string) string {
-	var content strings.Builder
-	doc.Find(selector).Each(func(_ int, s *goquery.Selection) {
-		s.Find("p, li, pre").Each(func(_ int, el *goquery.Selection) {
-			text := strings.TrimSpace(el.Text())
-			if len(text) > 50 {
-				content.WriteString(text + "\n")
-			}
-		})
-	})
-	return content.String()
 }
 
 // 用户交互
@@ -292,9 +219,21 @@ func main() {
 
 		sources := make([]string, 0, len(searchResp.Results))
 
+		// 使用默认配置初始化加载器
+		loader, err := url.NewLoader(ctx, nil)
+		if err != nil {
+			panic(err)
+		}
+
 		for _, result := range searchResp.Results {
-			content := extractMainContent(result.Link)
-			if content != "" {
+			docs, err := loader.Load(ctx, document.Source{
+				URI: result.Link,
+			})
+			if err != nil {
+				panic(err)
+			}
+			for _, doc := range docs {
+				content := doc.Content
 				sources = append(sources, content)
 			}
 		}
