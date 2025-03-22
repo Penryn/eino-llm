@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudwego/eino-ext/components/document/loader/url"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/cloudwego/eino-ext/components/tool/duckduckgo"
 	"github.com/cloudwego/eino-ext/components/tool/duckduckgo/ddgsearch"
-	"github.com/cloudwego/eino/components/document"
 	"log"
-	"regexp"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/schema"
@@ -113,152 +113,87 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 
 	sources := make([]string, 0, len(searchResp.Results))
 
-	// 使用默认配置初始化加载器
-	loader, err := url.NewLoader(ctx, nil)
-	if err != nil {
-		log.Printf("初始化加载器失败: %v", err)
-		return "", err
-	}
-
 	for _, result := range searchResp.Results {
-		docs, err := loader.Load(ctx, document.Source{
-			URI: result.Link,
-		})
+		fmt.Println(result.Link)
+		docs := extractMainContent(result.Link)
 		if err != nil {
 			log.Printf("加载网页内容失败: %v", err)
 			continue
 		}
-		for _, doc := range docs {
-			content := doc.Content
-			sources = append(sources, content)
-		}
+		sources = append(sources, docs)
 	}
 
 	out := strings.Join(sources, "\n")
-	out = cleanText(out)
 	return out, nil
 }
 
-// Pre-compiled regular expressions for better performance
-var (
-	// HTML element removal patterns
-	scriptPattern     = regexp.MustCompile(`(?i)<script\b[^>]*>[\s\S]*?</script>`)
-	inlineJSPattern   = regexp.MustCompile(`(?i)on\w+\s*=\s*["'].*?["']`)
-	jsFunctionPattern = regexp.MustCompile(`(?i)javascript:\s*\w+\([^)]*\)`)
-	stylePattern      = regexp.MustCompile(`<style\b[^>]*>[\s\S]*?</style>`)
-	iframePattern     = regexp.MustCompile(`<iframe\b[^>]*>[\s\S]*?</iframe>`)
-	noscriptPattern   = regexp.MustCompile(`<noscript\b[^>]*>[\s\S]*?</noscript>`)
-	footerPattern     = regexp.MustCompile(`<footer\b[^>]*>[\s\S]*?</footer>`)
-	headerPattern     = regexp.MustCompile(`<header\b[^>]*>[\s\S]*?</header>`)
-	navPattern        = regexp.MustCompile(`<nav\b[^>]*>[\s\S]*?</nav>`)
-	divIDPattern      = regexp.MustCompile(`<div\b[^>]*id=["']?(ad|banner|footer|header|nav|sidebar|copyright|menu|comment)["']?[^>]*>[\s\S]*?</div>`)
-	divClassPattern   = regexp.MustCompile(`<div\b[^>]*class=["']?(ad|banner|footer|header|nav|sidebar|copyright|menu|comment)["']?[^>]*>[\s\S]*?</div>`)
-
-	// Metadata extraction patterns
-	titlePattern    = regexp.MustCompile(`(?i)"title"\s*:\s*"([^"<]+)"|<title[^>]*>([^<]+)</title>`)
-	timePattern     = regexp.MustCompile(`(?i)postTime\s*=\s*"([^"]+)"|datetime="([^"]+)"|pubdate="([^"]+)"`)
-	authorPattern   = regexp.MustCompile(`(?i)author"\s*:\s*"([^"]+)"|发布\s*[：:]\s*([^\s<]+)|作者\s*[：:]\s*([^\s<]+)`)
-	keywordsPattern = regexp.MustCompile(`(?i)keywords\s*=\s*\[([^\]]+)\]|<meta\s+name=["']keywords["']\s+content=["']([^"']+)`)
-
-	// HTML tag and whitespace patterns
-	htmlTagPattern    = regexp.MustCompile(`<[^>]*>`)
-	whitespacePattern = regexp.MustCompile(`\s{2,}`)
-	newlinePattern    = regexp.MustCompile(`\n{3,}`)
-
-	// HTML entities map
-	htmlEntities = map[string]string{
-		"&nbsp;":   " ",
-		"&amp;":    "&",
-		"&lt;":     "<",
-		"&gt;":     ">",
-		"&quot;":   "\"",
-		"&apos;":   "'",
-		"&copy;":   "©",
-		"&reg;":    "®",
-		"&trade;":  "™",
-		"&mdash;":  "—",
-		"&ndash;":  "–",
-		"&hellip;": "…",
+// 增强版内容提取
+func extractMainContent(url string) string {
+	client := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: &http.Transport{DisableKeepAlives: true},
 	}
-)
 
-// cleanText removes unnecessary HTML elements and extracts useful content
-func cleanText(input string) string {
+	var resp *http.Response
+	var err error
 
-	// 1. Remove irrelevant elements
-	cleaned := removeIrrelevantElements(input)
-
-	// 2. Extract metadata
-	metadata := extractMetadata(cleaned)
-
-	// 3. Remove HTML tags but keep content
-	contentOnly := htmlTagPattern.ReplaceAllString(cleaned, " ")
-
-	// 4. Process HTML entities and whitespace
-	contentOnly = processEntitiesAndWhitespace(contentOnly)
-
-	// 6. Format final output
-	var result strings.Builder
-	if len(metadata) > 0 {
-		result.WriteString(metadata)
-		result.WriteString("\n--- 内容摘要 ---\n")
+	// 重试逻辑
+	for retry := 0; retry < 3; retry++ {
+		resp, err = client.Get(url)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			break
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		time.Sleep(time.Duration(retry+1) * 500 * time.Millisecond)
 	}
-	result.WriteString(contentOnly)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return ""
+	}
 
-	return result.String()
+	// 智能内容提取
+	doc, _ := goquery.NewDocumentFromReader(resp.Body)
+	content := findMainContent(doc)
+	return strings.TrimSpace(content)
 }
 
-// removeIrrelevantElements removes scripts, ads, and other unnecessary HTML elements
-func removeIrrelevantElements(text string) string {
-	text = scriptPattern.ReplaceAllString(text, "")
-	text = inlineJSPattern.ReplaceAllString(text, "")
-	text = jsFunctionPattern.ReplaceAllString(text, "")
-	text = stylePattern.ReplaceAllString(text, "")
-	text = iframePattern.ReplaceAllString(text, "")
-	text = noscriptPattern.ReplaceAllString(text, "")
-	text = footerPattern.ReplaceAllString(text, "")
-	text = headerPattern.ReplaceAllString(text, "")
-	text = navPattern.ReplaceAllString(text, "")
-	text = divIDPattern.ReplaceAllString(text, "")
-	text = divClassPattern.ReplaceAllString(text, "")
-	return text
-}
-
-// extractMetadata finds and formats title, author, time, keywords
-func extractMetadata(text string) string {
-	metadataPatterns := map[string]*regexp.Regexp{
-		"title":    titlePattern,
-		"time":     timePattern,
-		"author":   authorPattern,
-		"keywords": keywordsPattern,
+func findMainContent(doc *goquery.Document) string {
+	// 优先查找标准语义标签
+	selectors := []string{
+		"article", "main", "[role='main']",
+		".post-content", ".article-body",
+		"#content", "#main-content",
 	}
 
-	var metadata strings.Builder
-	for name, re := range metadataPatterns {
-		matches := re.FindStringSubmatch(text)
-		if len(matches) > 1 {
-			for i := 1; i < len(matches); i++ {
-				if value := strings.TrimSpace(matches[i]); value != "" {
-					metadata.WriteString(fmt.Sprintf("%s: %s\n", strings.Title(name), value))
-					break
-				}
-			}
+	for _, selector := range selectors {
+		if content := extractBySelector(doc, selector); content != "" {
+			return content
 		}
 	}
 
-	return metadata.String()
+	// 回退策略：查找最长文本块
+	var maxLength int
+	var mainContent string
+	doc.Find("div, section").Each(func(_ int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+		if len(text) > maxLength {
+			maxLength = len(text)
+			mainContent = text
+		}
+	})
+	return mainContent
 }
 
-// processEntitiesAndWhitespace replaces HTML entities and normalizes spacing
-func processEntitiesAndWhitespace(text string) string {
-	// Replace HTML entities
-	for entity, replacement := range htmlEntities {
-		text = strings.ReplaceAll(text, entity, replacement)
-	}
-
-	// Normalize whitespace
-	text = whitespacePattern.ReplaceAllString(text, " ")
-	text = newlinePattern.ReplaceAllString(text, "\n\n")
-
-	return strings.TrimSpace(text)
+func extractBySelector(doc *goquery.Document, selector string) string {
+	var content strings.Builder
+	doc.Find(selector).Each(func(_ int, s *goquery.Selection) {
+		s.Find("p, li, pre").Each(func(_ int, el *goquery.Selection) {
+			text := strings.TrimSpace(el.Text())
+			if len(text) > 50 {
+				content.WriteString(text + "\n")
+			}
+		})
+	})
+	return content.String()
 }
