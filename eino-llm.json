@@ -1,0 +1,1181 @@
+{
+  "name": "einoLLM",
+  "node_trigger_mode": "AllPredecessor",
+  "input_type": {
+    "title": "string"
+  },
+  "output_type": {
+    "title": "*schema.Message",
+    "description": "github.com/cloudwego/eino/schema"
+  },
+  "gen_local_state": {
+    "is_set": false
+  },
+  "id": "_2KxWb",
+  "component": "Graph",
+  "nodes": [
+    {
+      "id": "start",
+      "key": "start",
+      "name": "Start",
+      "type": "start",
+      "layoutData": {
+        "position": {
+          "x": 80,
+          "y": 259
+        }
+      }
+    },
+    {
+      "id": "end",
+      "key": "end",
+      "name": "End",
+      "type": "end",
+      "layoutData": {
+        "position": {
+          "x": 2320,
+          "y": 554
+        }
+      }
+    },
+    {
+      "id": "UnT3Iv",
+      "key": "agent",
+      "name": "",
+      "type": "Lambda",
+      "component_schema": {
+        "name": "react",
+        "component": "Lambda",
+        "component_source": "official",
+        "identifier": "github.com/cloudwego/eino/flow/agent/react",
+        "input_type": {
+          "title": "[]*schema.Message",
+          "description": ""
+        },
+        "output_type": {
+          "title": "*schema.Message",
+          "description": ""
+        },
+        "slots": [
+          {
+            "component": "ChatModel",
+            "field_loc_path": "Model",
+            "multiple": false,
+            "required": false,
+            "component_items": [
+              {
+                "name": "ark",
+                "component": "ChatModel",
+                "component_source": "official",
+                "identifier": "github.com/cloudwego/eino-ext/components/model/ark",
+                "input_type": {
+                  "title": "[]*schema.Message",
+                  "description": ""
+                },
+                "output_type": {
+                  "title": "*schema.Message",
+                  "description": ""
+                },
+                "config": {
+                  "description": "github.com/cloudwego/eino-ext/blob/main/components/model/ark/chatmodel.go",
+                  "schema": {
+                    "type": "object",
+                    "description": "",
+                    "properties": {
+                      "APIKey": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "AccessKey": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "BaseURL": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "FrequencyPenalty": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "float32",
+                          "kind": "float32",
+                          "isPtr": true
+                        }
+                      },
+                      "LogitBias": {
+                        "type": "object",
+                        "description": "",
+                        "additionalProperties": {
+                          "type": "number",
+                          "description": "",
+                          "goDefinition": {
+                            "libraryRef": {
+                              "version": "",
+                              "module": "",
+                              "pkgPath": ""
+                            },
+                            "typeName": "int",
+                            "kind": "int",
+                            "isPtr": false
+                          }
+                        },
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "map[string]int",
+                          "kind": "map",
+                          "isPtr": false
+                        }
+                      },
+                      "MaxTokens": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "int",
+                          "kind": "int",
+                          "isPtr": true
+                        }
+                      },
+                      "Model": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "PresencePenalty": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "float32",
+                          "kind": "float32",
+                          "isPtr": true
+                        }
+                      },
+                      "Region": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "RetryTimes": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "int",
+                          "kind": "int",
+                          "isPtr": true
+                        }
+                      },
+                      "SecretKey": {
+                        "type": "string",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "string",
+                          "kind": "string",
+                          "isPtr": false
+                        }
+                      },
+                      "Stop": {
+                        "type": "array",
+                        "description": "",
+                        "items": {
+                          "type": "string",
+                          "description": "",
+                          "goDefinition": {
+                            "libraryRef": {
+                              "version": "",
+                              "module": "",
+                              "pkgPath": ""
+                            },
+                            "typeName": "string",
+                            "kind": "string",
+                            "isPtr": false
+                          }
+                        },
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "[]string",
+                          "kind": "slice",
+                          "isPtr": false
+                        }
+                      },
+                      "Temperature": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "float32",
+                          "kind": "float32",
+                          "isPtr": true
+                        }
+                      },
+                      "Timeout": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "time",
+                            "pkgPath": "time"
+                          },
+                          "typeName": "time.Duration",
+                          "kind": "int64",
+                          "isPtr": true
+                        }
+                      },
+                      "TopP": {
+                        "type": "number",
+                        "description": "",
+                        "goDefinition": {
+                          "libraryRef": {
+                            "version": "",
+                            "module": "",
+                            "pkgPath": ""
+                          },
+                          "typeName": "float32",
+                          "kind": "float32",
+                          "isPtr": true
+                        }
+                      }
+                    },
+                    "propertyOrder": [
+                      "BaseURL",
+                      "Region",
+                      "Timeout",
+                      "RetryTimes",
+                      "APIKey",
+                      "AccessKey",
+                      "SecretKey",
+                      "Model",
+                      "MaxTokens",
+                      "Temperature",
+                      "TopP",
+                      "Stop",
+                      "FrequencyPenalty",
+                      "LogitBias",
+                      "PresencePenalty"
+                    ],
+                    "goDefinition": {
+                      "libraryRef": {
+                        "version": "",
+                        "module": "",
+                        "pkgPath": ""
+                      },
+                      "typeName": "ark.ChatModelConfig",
+                      "kind": "struct",
+                      "isPtr": false
+                    }
+                  },
+                  "config_input": ""
+                },
+                "is_io_type_mutable": false,
+                "version": "1.0.0",
+                "id": "SBxrkp",
+                "layoutData": {
+                  "isSlotNode": true,
+                  "position": {
+                    "x": 1365,
+                    "y": 0
+                  }
+                }
+              }
+            ],
+            "go_definition": {
+              "libraryRef": {
+                "version": "v0.3.4",
+                "module": "github.com/cloudwego/eino",
+                "pkgPath": "github.com/cloudwego/eino/components/model"
+              },
+              "typeName": "model.ChatModel",
+              "kind": "interface",
+              "isPtr": false
+            }
+          },
+          {
+            "component": "Tool",
+            "field_loc_path": "ToolsConfig.Tools",
+            "multiple": true,
+            "required": true,
+            "component_items": [
+              {
+                "name": "Tool",
+                "component": "Tool",
+                "component_source": "custom",
+                "extra_property": {
+                  "schema": {
+                    "type": "object",
+                    "description": "",
+                    "properties": {
+                      "interaction_type": {
+                        "type": "string",
+                        "description": "",
+                        "enum": [
+                          "invoke",
+                          "stream"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "interaction_type"
+                    ]
+                  },
+                  "extra_property_input": "{\"interaction_type\":\"invoke\"}"
+                },
+                "is_io_type_mutable": false,
+                "version": "1.0.0",
+                "input_type": {},
+                "output_type": {},
+                "id": "A0PP9L",
+                "layoutData": {
+                  "isSlotNode": true,
+                  "position": {
+                    "x": 1365,
+                    "y": 232
+                  }
+                }
+              }
+            ],
+            "go_definition": {
+              "libraryRef": {
+                "version": "v0.3.4",
+                "module": "github.com/cloudwego/eino",
+                "pkgPath": "github.com/cloudwego/eino/components/tool"
+              },
+              "typeName": "tool.BaseTool",
+              "kind": "interface",
+              "isPtr": false
+            }
+          }
+        ],
+        "config": {
+          "description": "github.com/cloudwego/eino/blob/main/flow/agent/react/react.go",
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "MaxStep": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "int",
+                  "kind": "int",
+                  "isPtr": false
+                }
+              },
+              "ToolReturnDirectly": {
+                "type": "object",
+                "description": "",
+                "additionalProperties": {
+                  "type": "object",
+                  "description": "",
+                  "goDefinition": {
+                    "libraryRef": {
+                      "version": "",
+                      "module": "",
+                      "pkgPath": ""
+                    },
+                    "typeName": "struct{}",
+                    "kind": "struct",
+                    "isPtr": false
+                  }
+                },
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "map[string]struct{}",
+                  "kind": "map",
+                  "isPtr": false
+                }
+              }
+            },
+            "propertyOrder": [
+              "MaxStep",
+              "ToolReturnDirectly"
+            ],
+            "goDefinition": {
+              "libraryRef": {
+                "version": "",
+                "module": "",
+                "pkgPath": ""
+              },
+              "typeName": "react.AgentConfig",
+              "kind": "struct",
+              "isPtr": false
+            }
+          },
+          "config_input": "{}"
+        },
+        "is_io_type_mutable": false,
+        "version": "1.0.0"
+      },
+      "node_option": {},
+      "layoutData": {
+        "position": {
+          "x": 1035,
+          "y": 181
+        }
+      }
+    },
+    {
+      "id": "ghvSK1",
+      "key": "ChatTemplate1",
+      "name": "",
+      "type": "ChatTemplate",
+      "component_schema": {
+        "name": "chatTemplate",
+        "component": "ChatTemplate",
+        "component_source": "official",
+        "identifier": "github.com/cloudwego/eino/components/prompt",
+        "input_type": {
+          "title": "map[string]any",
+          "description": ""
+        },
+        "output_type": {
+          "title": "[]*schema.Message",
+          "description": ""
+        },
+        "config": {
+          "description": "github.com/cloudwego/eino/blob/main/components/prompt/chat_template.go",
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "FormatType": {
+                "type": "number",
+                "description": "",
+                "enum": [
+                  "0",
+                  "1",
+                  "2"
+                ],
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "schema.FormatType",
+                  "kind": "uint8",
+                  "isPtr": false
+                }
+              }
+            },
+            "propertyOrder": [
+              "FormatType"
+            ],
+            "goDefinition": {
+              "libraryRef": {
+                "version": "",
+                "module": "",
+                "pkgPath": ""
+              },
+              "typeName": "Config",
+              "kind": "struct",
+              "isPtr": false
+            }
+          },
+          "config_input": ""
+        },
+        "is_io_type_mutable": false,
+        "version": "1.0.0"
+      },
+      "layoutData": {
+        "position": {
+          "x": 1695,
+          "y": 509
+        }
+      }
+    },
+    {
+      "id": "gdEOvK",
+      "key": "ChatModel2",
+      "name": "",
+      "type": "ChatModel",
+      "component_schema": {
+        "name": "openai",
+        "component": "ChatModel",
+        "component_source": "official",
+        "identifier": "github.com/cloudwego/eino-ext/components/model/openai",
+        "input_type": {
+          "title": "[]*schema.Message",
+          "description": ""
+        },
+        "output_type": {
+          "title": "*schema.Message",
+          "description": ""
+        },
+        "config": {
+          "description": "github.com/cloudwego/eino-ext/blob/main/components/model/openai/chatmodel.go",
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "APIKey": {
+                "type": "string",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "string",
+                  "kind": "string",
+                  "isPtr": false
+                }
+              },
+              "APIVersion": {
+                "type": "string",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "string",
+                  "kind": "string",
+                  "isPtr": false
+                }
+              },
+              "BaseURL": {
+                "type": "string",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "string",
+                  "kind": "string",
+                  "isPtr": false
+                }
+              },
+              "ByAzure": {
+                "type": "boolean",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "bool",
+                  "kind": "bool",
+                  "isPtr": false
+                }
+              },
+              "FrequencyPenalty": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "float32",
+                  "kind": "float32",
+                  "isPtr": true
+                }
+              },
+              "LogitBias": {
+                "type": "object",
+                "description": "",
+                "additionalProperties": {
+                  "type": "number",
+                  "description": "",
+                  "goDefinition": {
+                    "libraryRef": {
+                      "version": "",
+                      "module": "",
+                      "pkgPath": ""
+                    },
+                    "typeName": "int",
+                    "kind": "int",
+                    "isPtr": false
+                  }
+                },
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "map[string]int",
+                  "kind": "map",
+                  "isPtr": false
+                }
+              },
+              "MaxTokens": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "int",
+                  "kind": "int",
+                  "isPtr": true
+                }
+              },
+              "Model": {
+                "type": "string",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "string",
+                  "kind": "string",
+                  "isPtr": false
+                }
+              },
+              "PresencePenalty": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "float32",
+                  "kind": "float32",
+                  "isPtr": true
+                }
+              },
+              "ResponseFormat": {
+                "type": "object",
+                "description": "",
+                "properties": {
+                  "Type": {
+                    "type": "string",
+                    "description": "",
+                    "goDefinition": {
+                      "libraryRef": {
+                        "version": "v0.0.0-20250106073650-ed838398894a",
+                        "module": "github.com/cloudwego/eino-ext/libs/acl/openai",
+                        "pkgPath": "github.com/cloudwego/eino-ext/libs/acl/openai"
+                      },
+                      "typeName": "openai.ChatCompletionResponseFormatType",
+                      "kind": "string",
+                      "isPtr": false
+                    }
+                  }
+                },
+                "propertyOrder": [
+                  "Type"
+                ],
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "v0.0.0-20250106073650-ed838398894a",
+                    "module": "github.com/cloudwego/eino-ext/libs/acl/openai",
+                    "pkgPath": "github.com/cloudwego/eino-ext/libs/acl/openai"
+                  },
+                  "typeName": "openai.ChatCompletionResponseFormat",
+                  "kind": "struct",
+                  "isPtr": true
+                }
+              },
+              "Seed": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "int",
+                  "kind": "int",
+                  "isPtr": true
+                }
+              },
+              "Stop": {
+                "type": "array",
+                "description": "",
+                "items": {
+                  "type": "string",
+                  "description": "",
+                  "goDefinition": {
+                    "libraryRef": {
+                      "version": "",
+                      "module": "",
+                      "pkgPath": ""
+                    },
+                    "typeName": "string",
+                    "kind": "string",
+                    "isPtr": false
+                  }
+                },
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "[]string",
+                  "kind": "slice",
+                  "isPtr": false
+                }
+              },
+              "Temperature": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "float32",
+                  "kind": "float32",
+                  "isPtr": true
+                }
+              },
+              "Timeout": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "time",
+                    "pkgPath": "time"
+                  },
+                  "typeName": "time.Duration",
+                  "kind": "int64",
+                  "isPtr": false
+                }
+              },
+              "TopP": {
+                "type": "number",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "float32",
+                  "kind": "float32",
+                  "isPtr": true
+                }
+              },
+              "User": {
+                "type": "string",
+                "description": "",
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "string",
+                  "kind": "string",
+                  "isPtr": true
+                }
+              }
+            },
+            "propertyOrder": [
+              "ByAzure",
+              "BaseURL",
+              "APIVersion",
+              "APIKey",
+              "Timeout",
+              "Model",
+              "MaxTokens",
+              "Temperature",
+              "TopP",
+              "Stop",
+              "PresencePenalty",
+              "ResponseFormat",
+              "Seed",
+              "FrequencyPenalty",
+              "LogitBias",
+              "User"
+            ],
+            "goDefinition": {
+              "libraryRef": {
+                "version": "",
+                "module": "",
+                "pkgPath": ""
+              },
+              "typeName": "openai.ChatModelConfig",
+              "kind": "struct",
+              "isPtr": false
+            }
+          },
+          "config_input": ""
+        },
+        "is_io_type_mutable": false,
+        "version": "1.0.0"
+      },
+      "layoutData": {
+        "position": {
+          "x": 2025,
+          "y": 509
+        }
+      }
+    },
+    {
+      "id": "nyfJR4",
+      "key": "SearchTemplate",
+      "name": "",
+      "type": "ChatTemplate",
+      "component_schema": {
+        "name": "chatTemplate",
+        "component": "ChatTemplate",
+        "component_source": "official",
+        "identifier": "github.com/cloudwego/eino/components/prompt",
+        "input_type": {
+          "title": "map[string]any",
+          "description": ""
+        },
+        "output_type": {
+          "title": "[]*schema.Message",
+          "description": ""
+        },
+        "config": {
+          "description": "github.com/cloudwego/eino/blob/main/components/prompt/chat_template.go",
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "FormatType": {
+                "type": "number",
+                "description": "",
+                "enum": [
+                  "0",
+                  "1",
+                  "2"
+                ],
+                "goDefinition": {
+                  "libraryRef": {
+                    "version": "",
+                    "module": "",
+                    "pkgPath": ""
+                  },
+                  "typeName": "schema.FormatType",
+                  "kind": "uint8",
+                  "isPtr": false
+                }
+              }
+            },
+            "propertyOrder": [
+              "FormatType"
+            ],
+            "goDefinition": {
+              "libraryRef": {
+                "version": "",
+                "module": "",
+                "pkgPath": ""
+              },
+              "typeName": "Config",
+              "kind": "struct",
+              "isPtr": false
+            }
+          },
+          "config_input": "{}"
+        },
+        "is_io_type_mutable": false,
+        "version": "1.0.0"
+      },
+      "node_option": {},
+      "layoutData": {
+        "position": {
+          "x": 705,
+          "y": 214
+        }
+      }
+    },
+    {
+      "id": "sV6_QD",
+      "key": "ConveyMap",
+      "name": "",
+      "type": "Lambda",
+      "component_schema": {
+        "name": "Lambda",
+        "component": "Lambda",
+        "component_source": "custom",
+        "input_type": {
+          "title": "string",
+          "description": ""
+        },
+        "output_type": {
+          "title": "map[string]any",
+          "description": ""
+        },
+        "extra_property": {
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "has_option": {
+                "type": "boolean",
+                "description": ""
+              },
+              "interaction_type": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "invoke",
+                  "stream",
+                  "collect",
+                  "transform"
+                ]
+              },
+              "option_package_path": {
+                "type": "string",
+                "description": ""
+              },
+              "option_type_name": {
+                "type": "string",
+                "description": ""
+              }
+            },
+            "required": [
+              "interaction_type",
+              "has_option"
+            ]
+          },
+          "extra_property_input": "{\"interaction_type\":\"invoke\"}"
+        },
+        "is_io_type_mutable": true,
+        "version": "1.0.0"
+      },
+      "node_option": {},
+      "layoutData": {
+        "position": {
+          "x": 375,
+          "y": 163
+        }
+      }
+    },
+    {
+      "id": "n9ecdY",
+      "key": "ConveyMap",
+      "name": "",
+      "type": "Lambda",
+      "component_schema": {
+        "name": "Lambda",
+        "component": "Lambda",
+        "component_source": "custom",
+        "input_type": {
+          "title": "string",
+          "description": ""
+        },
+        "output_type": {
+          "title": "map[string]any",
+          "description": ""
+        },
+        "extra_property": {
+          "schema": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "has_option": {
+                "type": "boolean",
+                "description": ""
+              },
+              "interaction_type": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "invoke",
+                  "stream",
+                  "collect",
+                  "transform"
+                ]
+              },
+              "option_package_path": {
+                "type": "string",
+                "description": ""
+              },
+              "option_type_name": {
+                "type": "string",
+                "description": ""
+              }
+            },
+            "required": [
+              "interaction_type",
+              "has_option"
+            ]
+          },
+          "extra_property_input": "{\"interaction_type\":\"invoke\"}"
+        },
+        "is_io_type_mutable": true,
+        "version": "1.0.0"
+      },
+      "node_option": {},
+      "layoutData": {
+        "position": {
+          "x": 1365,
+          "y": 458
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "start",
+      "targetWorkflowNodeId": "sV6_QD",
+      "source_node_key": "start",
+      "target_node_key": "ConveyMap"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "gdEOvK",
+      "targetWorkflowNodeId": "end",
+      "source_node_key": "ChatModel2",
+      "target_node_key": "end"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "nyfJR4",
+      "targetWorkflowNodeId": "UnT3Iv",
+      "source_node_key": "SearchTemplate",
+      "target_node_key": "agent"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "UnT3Iv",
+      "targetWorkflowNodeId": "n9ecdY",
+      "source_node_key": "agent",
+      "target_node_key": "ConveyMap"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "n9ecdY",
+      "targetWorkflowNodeId": "ghvSK1",
+      "source_node_key": "ConveyMap",
+      "target_node_key": "ChatTemplate1"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "ghvSK1",
+      "targetWorkflowNodeId": "gdEOvK",
+      "source_node_key": "ChatTemplate1",
+      "target_node_key": "ChatModel2"
+    },
+    {
+      "id": "",
+      "name": "",
+      "sourceWorkflowNodeId": "sV6_QD",
+      "targetWorkflowNodeId": "nyfJR4",
+      "source_node_key": "ConveyMap",
+      "target_node_key": "SearchTemplate"
+    }
+  ],
+  "branches": [],
+  "nodeCounter": {
+    "Lambda": 8,
+    "Tool": 2,
+    "ChatModel": 3,
+    "ChatTemplate": 3,
+    "Loader": 3
+  }
+}
