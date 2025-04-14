@@ -93,6 +93,23 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		switch msg.Type {
 		case "switch_assistant":
 			log.Printf("切换到%s面试助手", map[bool]string{true: "前端", false: "后端"}[msg.IsFrontend])
+			// 发送历史记录
+			var history []*schema.Message
+			if msg.IsFrontend {
+				history = FrontendHistory
+			} else {
+				history = BackendHistory
+			}
+			for _, h := range history {
+				content := h.Content
+				if h.Role == "assistant" {
+					content = "[历史记录] " + content
+				}
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(content)); err != nil {
+					log.Printf("发送历史记录失败: %v", err)
+					break
+				}
+			}
 		case "message":
 			// 处理消息
 			if err := streamAgentResponse(ctx, conn, msg.Content, msg.IsFrontend); err != nil {
@@ -126,7 +143,12 @@ func streamAgentResponse(ctx context.Context, conn *websocket.Conn, msg string, 
 		if errors.Is(err, io.EOF) {
 			// 只在有内容时才添加到历史记录
 			if fullResponse.Len() > 0 {
-				History = append(History, schema.AssistantMessage(fullResponse.String(), nil))
+				response := schema.AssistantMessage(fullResponse.String(), nil)
+				if isFrontend {
+					FrontendHistory = append(FrontendHistory, schema.UserMessage(msg), response)
+				} else {
+					BackendHistory = append(BackendHistory, schema.UserMessage(msg), response)
+				}
 			}
 			return nil
 		}

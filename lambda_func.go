@@ -26,7 +26,11 @@ var Examples = []*schema.Message{
 4. 深入追问：如何避免热点 key 失效？如何设计分布式缓存架构？`, nil),
 }
 
-var History []*schema.Message
+// 分别存储前端和后端的历史记录
+var (
+	BackendHistory  []*schema.Message
+	FrontendHistory []*schema.Message
+)
 
 // newLambda2 component initialization function of node 'ConveyMap1' in graph 'einoLLM'
 func newLambda2(ctx context.Context, input *schema.Message) (output map[string]any, err error) {
@@ -34,7 +38,7 @@ func newLambda2(ctx context.Context, input *schema.Message) (output map[string]a
 		"role":         "资深后端架构师",
 		"style":        "技术面试官视角",
 		"question":     input.Content,
-		"chat_history": History,
+		"chat_history": BackendHistory,
 		"examples":     Examples,
 	}, nil
 }
@@ -58,7 +62,7 @@ func newLambda3(ctx context.Context, input *schema.Message) (output map[string]a
 		"role":         "资深前端架构师",
 		"style":        "技术面试官视角",
 		"question":     input.Content,
-		"chat_history": History,
+		"chat_history": FrontendHistory,
 		"examples":     Examples2,
 	}, nil
 }

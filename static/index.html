@@ -519,6 +519,15 @@
                 return;
             }
             
+            // 处理历史记录消息
+            if (message.startsWith('[历史记录]')) {
+                const content = message.substring(6);
+                const messageDiv = createMessageDiv(content);
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return;
+            }
+            
             // 只有在收到非日志消息时才隐藏加载动画
             hideTypingIndicator();
             
