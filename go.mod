@@ -3,22 +3,20 @@ module eino-llm
 go 1.23.3
 
 require (
+	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/cloudwego/eino v0.3.16
-	github.com/cloudwego/eino-ext/components/document/loader/url v0.0.0-20250319101353-50eb9bbe8192
 	github.com/cloudwego/eino-ext/components/model/ark v0.1.3
 	github.com/cloudwego/eino-ext/components/model/openai v0.0.0-20250320062631-616205c32186
 	github.com/cloudwego/eino-ext/components/tool/duckduckgo v0.0.0-20250319101353-50eb9bbe8192
+	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.10.2 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
-	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bytedance/sonic v1.12.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
-	github.com/cloudwego/eino-ext/components/document/parser/html v0.0.0-20241224063832-9fbcc0e56c28 // indirect
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250305023926-469de0301955 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -27,14 +25,12 @@ require (
 	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/goph/emperror v0.17.2 // indirect
-	github.com/gorilla/css v1.0.1 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect

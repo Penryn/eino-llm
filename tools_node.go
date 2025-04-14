@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/cloudwego/eino-ext/components/tool/duckduckgo"
-	"github.com/cloudwego/eino-ext/components/tool/duckduckgo/ddgsearch"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/cloudwego/eino-ext/components/tool/duckduckgo"
+	"github.com/cloudwego/eino-ext/components/tool/duckduckgo/ddgsearch"
 
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/schema"
@@ -67,7 +67,7 @@ type SearchQuery struct {
 }
 
 func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, opts ...tool.Option) (string, error) {
-	fmt.Println("正在搜索...")
+	log.Printf("[Search] 正在联网搜索...")
 	var query SearchQuery
 	err := json.Unmarshal([]byte(argumentsInJSON), &query)
 	if err != nil {
@@ -114,7 +114,7 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	sources := make([]string, 0, len(searchResp.Results))
 
 	for _, result := range searchResp.Results {
-		fmt.Println(result.Link)
+		log.Printf("正在加载网页内容: %s", result.Link)
 		docs := extractMainContent(result.Link)
 		if err != nil {
 			log.Printf("加载网页内容失败: %v", err)

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术问答助手</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
+            --info-color: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .chat-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .log-section {
+            flex: 1;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+            overflow-y: auto;
+            min-width: 300px;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 16px;
+            border-radius: 12px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+            background-color: #f8fafc;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .assistant-message .markdown-body {
+            background-color: transparent;
+            padding: 0;
+            font-size: 16px;
+            color: var(--text-color);
+        }
+
+        .assistant-message .markdown-body pre {
+            background-color: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            color: #e2e8f0;
+        }
+
+        .assistant-message .markdown-body code {
+            background-color: #f1f5f9;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 85%;
+            color: #0f172a;
+        }
+
+        .assistant-message .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        .assistant-message .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .assistant-message .markdown-body table th,
+        .assistant-message .markdown-body table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+        }
+
+        .assistant-message .markdown-body table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .assistant-message .markdown-body table tr:nth-child(2n) {
+            background-color: #f8fafc;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        textarea {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            resize: none;
+            min-height: 60px;
+            max-height: 200px;
+            font-size: 16px;
+            line-height: 1.5;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .log-entry {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 14px;
+            color: #475569;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .log-entry:hover {
+            background-color: #f1f5f9;
+        }
+
+        .log-entry.info {
+            border-left-color: var(--info-color);
+        }
+
+        .log-entry.error {
+            border-left-color: var(--error-color);
+        }
+
+        .log-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            padding: 12px 16px;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            margin-top: 8px;
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #94a3b8;
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { 
+                transform: translateY(0); 
+                opacity: 0.4;
+            }
+            50% { 
+                transform: translateY(-4px); 
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .chat-section, .log-section {
+                min-width: 100%;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="chat-section">
+            <div class="chat-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                    <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
+                </svg>
+                <h2>技术问答助手</h2>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="user-input" placeholder="请输入技术问题..."></textarea>
+                    <button id="send-button" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+                        </svg>
+                        发送
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="log-section">
+            <div class="log-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h3>系统日志</h3>
+            </div>
+            <div id="log-messages"></div>
+        </div>
+    </div>
+
+    <script>
+        // 配置 marked
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function(code, lang) {
+                return code;
+            }
+        });
+
+        const ws = new WebSocket('ws://' + window.location.host + '/ws');
+        const chatMessages = document.getElementById('chat-messages');
+        const logMessages = document.getElementById('log-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        let isTyping = false;
+        let currentMessage = '';
+
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = message;
+            logMessages.appendChild(logEntry);
+            logMessages.scrollTop = logMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            if (!isTyping) {
+                isTyping = true;
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // 强制重排以触发动画
+                typingDiv.offsetHeight;
+                typingDiv.style.opacity = '1';
+            }
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.style.opacity = '0';
+                setTimeout(() => {
+                    typingIndicator.remove();
+                }, 300);
+            }
+            isTyping = false;
+        }
+
+        function createMessageDiv(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
+            
+            if (isUser) {
+                messageDiv.textContent = content;
+            } else {
+                const markdownContent = document.createElement('div');
+                markdownContent.className = 'markdown-body';
+                markdownContent.innerHTML = marked.parse(content);
+                messageDiv.appendChild(markdownContent);
+            }
+            
+            return messageDiv;
+        }
+
+        ws.onopen = function() {
+            addLog('WebSocket 连接已建立', 'info');
+        };
+
+        ws.onclose = function() {
+            addLog('WebSocket 连接已关闭', 'error');
+        };
+
+        ws.onerror = function(error) {
+            addLog('WebSocket 错误: ' + error.message, 'error');
+        };
+
+        ws.onmessage = function(event) {
+            const message = event.data;
+            
+            // 处理日志消息
+            if (message.startsWith('[LOG]')) {
+                addLog(message.substring(5), 'info');
+                return;
+            }
+            
+            // 只有在收到非日志消息时才隐藏加载动画
+            hideTypingIndicator();
+            
+            currentMessage += message;
+            
+            const lastMessage = chatMessages.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('assistant-message')) {
+                lastMessage.querySelector('.markdown-body').innerHTML = marked.parse(currentMessage);
+            } else {
+                const messageDiv = createMessageDiv(currentMessage);
+                chatMessages.appendChild(messageDiv);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 重置当前消息
+            currentMessage = '';
+
+            // 添加用户消息到聊天界面
+            const userMessageDiv = createMessageDiv(message, true);
+            chatMessages.appendChild(userMessageDiv);
+
+            // 显示正在输入指示器
+            showTypingIndicator();
+
+            // 发送消息到服务器
+            ws.send(message);
+            addLog('发送消息: ' + message, 'info');
+
+            // 清空输入框
+            userInput.value = '';
+            userInput.focus();
+        }
+
+        // 处理输入法确认和换行
+        userInput.addEventListener('compositionstart', function() {
+            this.dataset.composing = 'true';
+        });
+
+        userInput.addEventListener('compositionend', function() {
+            this.dataset.composing = 'false';
+        });
+
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                // 如果正在输入法输入，不处理
+                if (this.dataset.composing === 'true') {
+                    return;
+                }
+                // 发送消息
+                sendMessage();
+            }
+        });
+
+        // 自动调整文本框高度
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html> 

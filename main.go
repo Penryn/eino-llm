@@ -1,48 +1,104 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/eino/schema"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"strings"
+	"sync"
+
+	"github.com/cloudwego/eino/schema"
+	"github.com/gorilla/websocket"
 )
 
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	loggers  = make(map[*websocket.Conn]struct{})
+	logMutex sync.Mutex
+)
+
+// 自定义日志写入器
+type wsLogger struct {
+	conn *websocket.Conn
+}
+
+func (w *wsLogger) Write(p []byte) (n int, err error) {
+	if err := w.conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("[LOG] %s", string(p)))); err != nil {
+		return 0, err
+	}
+	return len(p), nil
+}
+
 func main() {
+	// 提供静态文件服务
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
+
+	// WebSocket 处理
+	http.HandleFunc("/ws", handleWebSocket)
+
+	// 启动服务器
+	log.Println("服务器启动在 :8081")
+	log.Fatal(http.ListenAndServe(":8081", nil))
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("WebSocket 升级失败: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	// 注册日志写入器
+	logMutex.Lock()
+	loggers[conn] = struct{}{}
+	logMutex.Unlock()
+
+	// 创建自定义日志写入器
+	wsLog := &wsLogger{conn: conn}
+	log.SetOutput(io.MultiWriter(os.Stdout, wsLog))
+
 	ctx := context.Background()
 	for {
-		input := getMultilineInput()
-		if input == "" {
-			return
-		}
-		if input == "exit" {
-			return
-		}
-
-		fmt.Println("\n分析中...")
-
-		_, err := runAgent(ctx, input)
+		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Printf("[Chat] Error running agent: %v\n", err)
-			return
+			log.Printf("读取消息失败: %v", err)
+			break
+		}
+
+		// 处理消息
+		if err := streamAgentResponse(ctx, conn, string(message)); err != nil {
+			log.Printf("处理消息失败: %v", err)
+			break
 		}
 	}
 
+	// 注销日志写入器
+	logMutex.Lock()
+	delete(loggers, conn)
+	logMutex.Unlock()
 }
 
-func runAgent(ctx context.Context, msg string) (string, error) {
+func streamAgentResponse(ctx context.Context, conn *websocket.Conn, msg string) error {
 	runner, err := buildeinoLLM(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to build agent graph: %w", err)
+		return fmt.Errorf("failed to build agent graph: %w", err)
 	}
 
 	sr, err := runner.Stream(ctx, msg)
 	if err != nil {
-		return "", fmt.Errorf("failed to stream: %w", err)
+		return fmt.Errorf("failed to stream: %w", err)
 	}
 	defer sr.Close()
 
@@ -50,33 +106,23 @@ func runAgent(ctx context.Context, msg string) (string, error) {
 	for {
 		resp, err := sr.Recv()
 		if errors.Is(err, io.EOF) {
-			History = append(History, schema.AssistantMessage(fullResponse.String(), nil))
-			return fullResponse.String(), nil
+			// 只在有内容时才添加到历史记录
+			if fullResponse.Len() > 0 {
+				History = append(History, schema.AssistantMessage(fullResponse.String(), nil))
+			}
+			return nil
 		}
 		if err != nil {
-			return "", fmt.Errorf("流式处理异常: %w", err)
+			return fmt.Errorf("流式处理异常: %w", err)
 		}
-		fmt.Print(resp.Content)
+
+		// 累积完整响应
 		fullResponse.WriteString(resp.Content)
-	}
 
-}
-func getMultilineInput() string {
-	fmt.Println("\n请输入技术问题（输入空行结束）:")
-
-	scanner := bufio.NewScanner(os.Stdin)
-	var lines []string
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			break
+		// 发送当前片段
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(resp.Content)); err != nil {
+			return fmt.Errorf("发送消息失败: %w", err)
 		}
-		lines = append(lines, line)
 	}
-
-	if len(lines) == 0 {
-		return ""
-	}
-	return strings.Join(lines, "\n")
 }
+
