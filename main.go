@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +38,12 @@ func (w *wsLogger) Write(p []byte) (n int, err error) {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+type Message struct {
+	Type       string `json:"type"`
+	Content    string `json:"content"`
+	IsFrontend bool   `json:"isFrontend"`
 }
 
 func main() {
@@ -77,10 +84,21 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		// 处理消息
-		if err := streamAgentResponse(ctx, conn, string(message)); err != nil {
-			log.Printf("处理消息失败: %v", err)
-			break
+		var msg Message
+		if err := json.Unmarshal(message, &msg); err != nil {
+			log.Printf("解析消息失败: %v", err)
+			continue
+		}
+
+		switch msg.Type {
+		case "switch_assistant":
+			log.Printf("切换到%s面试助手", map[bool]string{true: "前端", false: "后端"}[msg.IsFrontend])
+		case "message":
+			// 处理消息
+			if err := streamAgentResponse(ctx, conn, msg.Content, msg.IsFrontend); err != nil {
+				log.Printf("处理消息失败: %v", err)
+				break
+			}
 		}
 	}
 
@@ -90,8 +108,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	logMutex.Unlock()
 }
 
-func streamAgentResponse(ctx context.Context, conn *websocket.Conn, msg string) error {
-	runner, err := buildeinoLLM(ctx)
+func streamAgentResponse(ctx context.Context, conn *websocket.Conn, msg string, isFrontend bool) error {
+	runner, err := buildeinoLLM(ctx, isFrontend)
 	if err != nil {
 		return fmt.Errorf("failed to build agent graph: %w", err)
 	}
@@ -125,4 +143,3 @@ func streamAgentResponse(ctx context.Context, conn *websocket.Conn, msg string) 
 		}
 	}
 }
-

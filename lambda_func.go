@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/cloudwego/eino/schema"
 )
 
@@ -35,5 +36,29 @@ func newLambda2(ctx context.Context, input *schema.Message) (output map[string]a
 		"question":     input.Content,
 		"chat_history": History,
 		"examples":     Examples,
+	}, nil
+}
+
+var Examples2 = []*schema.Message{
+	schema.UserMessage(`React Hooks 和 Class 组件的区别是什么？`),
+	schema.AssistantMessage(
+		`1. 核心考点：React Hooks 的设计理念和优势
+2. 实际案例：某电商平台从 Class 组件迁移到 Hooks 的性能提升
+3. 最佳实践：
+   - 使用 useState 管理状态
+   - useEffect 处理副作用
+   - 自定义 Hooks 封装业务逻辑
+4. 性能优化：如何避免不必要的重渲染，使用 useMemo 和 useCallback
+5. 深入追问：React 的 Fiber 架构如何影响性能？`, nil),
+}
+
+// newLambda3 component initialization function of node 'ConveyMap1' in graph 'einoLLM'
+func newLambda3(ctx context.Context, input *schema.Message) (output map[string]any, err error) {
+	return map[string]any{
+		"role":         "资深前端架构师",
+		"style":        "技术面试官视角",
+		"question":     input.Content,
+		"chat_history": History,
+		"examples":     Examples2,
 	}, nil
 }

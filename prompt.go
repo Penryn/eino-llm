@@ -18,6 +18,37 @@ var (
 	UserMessageTemplate = `请优化以下问题，使其更适合搜索引擎查询：
 【原始问题】{question}  // 用户的原始问题
 【优化查询】请转换成简洁、精准的搜索关键词或查询语句`
+
+	SystemMessageTemplate1 = `作为{role}，你需要以{style}风格进行面试答疑，要求：  
+1. 结合真实企业面试场景  
+2. 准确识别候选人技术短板  
+3. 解析核心考点及其深入考察方式  
+4. 结合实际应用场景提供最佳回答策略  
+5. 使用分层解析法：基础概念 → 核心原理 → 进阶考察 → 最佳解法`
+
+	UserMessageTemplate1 = `后端技术面试答疑请求：
+【问题描述】{question}
+【回答要求】请按以下结构回答：
+1. 核心考点解析
+2. 真实企业面试案例
+3. 最优回答策略与示例
+4. 面试官深入追问方向`
+
+	SystemMessageTemplate2 = `作为{role}，你需要以{style}风格进行前端面试答疑，要求：  
+1. 结合现代前端开发场景  
+2. 关注前端工程化和性能优化  
+3. 解析前端核心技术和最佳实践  
+4. 结合实际项目经验提供解决方案  
+5. 使用分层解析法：基础概念 → 核心原理 → 工程实践 → 性能优化`
+
+	UserMessageTemplate2 = `前端技术面试答疑请求：
+【问题描述】{question}
+【回答要求】请按以下结构回答：
+1. 核心考点解析
+2. 实际项目案例
+3. 最佳实践与解决方案
+4. 性能优化与工程化建议
+5. 面试官深入追问方向`
 )
 
 type ChatTemplateConfig struct {
@@ -41,23 +72,6 @@ func newChatTemplate(ctx context.Context) (ctp prompt.ChatTemplate, err error) {
 	return ctp, nil
 }
 
-var (
-	SystemMessageTemplate1 = `作为{role}，你需要以{style}风格进行面试答疑，要求：  
-1. 结合真实企业面试场景  
-2. 准确识别候选人技术短板  
-3. 解析核心考点及其深入考察方式  
-4. 结合实际应用场景提供最佳回答策略  
-5. 使用分层解析法：基础概念 → 核心原理 → 进阶考察 → 最佳解法`
-
-	UserMessageTemplate1 = `后端技术面试答疑请求：
-【问题描述】{question}
-【回答要求】请按以下结构回答：
-1. 核心考点解析
-2. 真实企业面试案例
-3. 最优回答策略与示例
-4. 面试官深入追问方向`
-)
-
 type ChatTemplate1Config struct {
 	FormatType schema.FormatType
 	Templates  []schema.MessagesTemplate
@@ -71,6 +85,27 @@ func newChatTemplate1(ctx context.Context) (ctp prompt.ChatTemplate, err error) 
 		Templates: []schema.MessagesTemplate{
 			schema.SystemMessage(SystemMessageTemplate),
 			schema.UserMessage(UserMessageTemplate),
+		},
+	}
+	ctp = prompt.FromMessages(config.FormatType, config.Templates...)
+	return ctp, nil
+}
+
+type ChatTemplate2Config struct {
+	FormatType schema.FormatType
+	Templates  []schema.MessagesTemplate
+}
+
+// newChatTemplate2 component initialization function of node 'ChatTemplate2' in graph 'einoLLM'
+func newChatTemplate2(ctx context.Context) (ctp prompt.ChatTemplate, err error) {
+	// TODO Modify component configuration here.
+	config := &ChatTemplate2Config{
+		FormatType: schema.FString,
+		Templates: []schema.MessagesTemplate{
+			schema.SystemMessage(SystemMessageTemplate2),
+			schema.MessagesPlaceholder("examples", true),
+			schema.MessagesPlaceholder("chat_history", false),
+			schema.UserMessage(UserMessageTemplate2),
 		},
 	}
 	ctp = prompt.FromMessages(config.FormatType, config.Templates...)

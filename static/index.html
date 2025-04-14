@@ -69,12 +69,44 @@
             color: white;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
         }
 
         .chat-header h2 {
             font-size: 1.5rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .assistant-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .assistant-switch:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .assistant-switch.active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .assistant-switch span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .assistant-switch .icon {
+            width: 20px;
+            height: 20px;
         }
 
         .chat-messages {
@@ -356,11 +388,19 @@
     <div class="app-container">
         <div class="chat-section">
             <div class="chat-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
-                    <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
-                </svg>
-                <h2>技术问答助手</h2>
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                        <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
+                    </svg>
+                    <span id="assistant-title">技术面试助手</span>
+                </h2>
+                <div class="assistant-switch" id="assistant-switch">
+                    <span>后端</span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
             </div>
             <div id="chat-messages" class="chat-messages"></div>
             <div class="input-container">
@@ -403,6 +443,10 @@
         const sendButton = document.getElementById('send-button');
         let isTyping = false;
         let currentMessage = '';
+
+        const assistantSwitch = document.getElementById('assistant-switch');
+        const assistantTitle = document.getElementById('assistant-title');
+        let isFrontendAssistant = false;
 
         function addLog(message, type = 'info') {
             const logEntry = document.createElement('div');
@@ -490,6 +534,25 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         };
 
+        assistantSwitch.addEventListener('click', function() {
+            isFrontendAssistant = !isFrontendAssistant;
+            this.querySelector('span').textContent = isFrontendAssistant ? '前端' : '后端';
+            assistantTitle.textContent = isFrontendAssistant ? '前端面试助手' : '后端面试助手';
+            this.classList.toggle('active');
+            
+            // 清空当前对话
+            chatMessages.innerHTML = '';
+            currentMessage = '';
+            
+            // 发送切换消息到服务器
+            ws.send(JSON.stringify({
+                type: 'switch_assistant',
+                isFrontend: isFrontendAssistant
+            }));
+            
+            addLog(`已切换到${isFrontendAssistant ? '前端' : '后端'}面试助手`, 'info');
+        });
+
         function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -505,7 +568,11 @@
             showTypingIndicator();
 
             // 发送消息到服务器
-            ws.send(message);
+            ws.send(JSON.stringify({
+                type: 'message',
+                content: message,
+                isFrontend: isFrontendAssistant
+            }));
             addLog('发送消息: ' + message, 'info');
 
             // 清空输入框

@@ -71,7 +71,8 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	var query SearchQuery
 	err := json.Unmarshal([]byte(argumentsInJSON), &query)
 	if err != nil {
-		return "", err
+		log.Printf("解析搜索参数失败: %v", err)
+		return "", nil
 	}
 	config := &duckduckgo.Config{
 		ToolName:   "duckduckgo_search",
@@ -86,7 +87,7 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	searchTool, err := duckduckgo.NewTool(ctx, config)
 	if err != nil {
 		log.Printf("创建搜索工具失败: %v", err)
-		return "", err
+		return "", nil
 	}
 
 	searchReq := &duckduckgo.SearchRequest{
@@ -95,20 +96,25 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	}
 	jsonReq, err := json.Marshal(searchReq)
 	if err != nil {
-		log.Fatalf("搜索请求序列化失败: %v", err)
-		return "", err
+		log.Printf("搜索请求序列化失败: %v", err)
+		return "", nil
 	}
 
 	resp, err := searchTool.InvokableRun(ctx, string(jsonReq))
 	if err != nil {
-		log.Println("搜索失败:", err)
-		return "", err
+		log.Printf("搜索失败: %v", err)
+		return "", nil
 	}
 
 	var searchResp duckduckgo.SearchResponse
 	if err := json.Unmarshal([]byte(resp), &searchResp); err != nil {
-		log.Println("解析搜索结果失败:", err)
-		return "", err
+		log.Printf("解析搜索结果失败: %v", err)
+		return "", nil
+	}
+
+	if len(searchResp.Results) == 0 {
+		log.Printf("未找到搜索结果")
+		return "", nil
 	}
 
 	sources := make([]string, 0, len(searchResp.Results))
@@ -116,11 +122,14 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	for _, result := range searchResp.Results {
 		log.Printf("正在加载网页内容: %s", result.Link)
 		docs := extractMainContent(result.Link)
-		if err != nil {
-			log.Printf("加载网页内容失败: %v", err)
-			continue
+		if docs != "" {
+			sources = append(sources, docs)
 		}
-		sources = append(sources, docs)
+	}
+
+	if len(sources) == 0 {
+		log.Printf("未找到有效网页内容")
+		return "", nil
 	}
 
 	out := strings.Join(sources, "\n")

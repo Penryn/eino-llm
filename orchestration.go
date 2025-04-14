@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
+
+	"github.com/cloudwego/eino/components/prompt"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 )
@@ -20,7 +22,7 @@ var (
 	arkModelName string // ark模型名称
 )
 
-func buildeinoLLM(ctx context.Context) (r compose.Runnable[string, *schema.Message], err error) {
+func buildeinoLLM(ctx context.Context, isFrontend bool) (r compose.Runnable[string, *schema.Message], err error) {
 	const (
 		agent          = "agent"
 		ChatTemplate1  = "ChatTemplate1"
@@ -46,11 +48,19 @@ func buildeinoLLM(ctx context.Context) (r compose.Runnable[string, *schema.Messa
 		return nil, err
 	}
 	_ = g.AddLambdaNode(agent, agentKeyOfLambda)
-	chatTemplate1KeyOfChatTemplate, err := newChatTemplate(ctx)
+
+	// 根据是否是前端助手选择不同的模板
+	var chatTemplate1KeyOfChatTemplate prompt.ChatTemplate
+	if isFrontend {
+		chatTemplate1KeyOfChatTemplate, err = newChatTemplate2(ctx)
+	} else {
+		chatTemplate1KeyOfChatTemplate, err = newChatTemplate(ctx)
+	}
 	if err != nil {
 		return nil, err
 	}
 	_ = g.AddChatTemplateNode(ChatTemplate1, chatTemplate1KeyOfChatTemplate)
+
 	chatModel2KeyOfChatModel, err := newChatModel1(ctx)
 	if err != nil {
 		return nil, err
@@ -62,7 +72,11 @@ func buildeinoLLM(ctx context.Context) (r compose.Runnable[string, *schema.Messa
 	}
 	_ = g.AddChatTemplateNode(SearchTemplate, searchTemplateKeyOfChatTemplate)
 	_ = g.AddLambdaNode(ConveyMap, compose.InvokableLambda(newLambda1))
-	_ = g.AddLambdaNode(ConveyMap1, compose.InvokableLambda(newLambda2))
+	if isFrontend {
+		_ = g.AddLambdaNode(ConveyMap1, compose.InvokableLambda(newLambda3))
+	} else {
+		_ = g.AddLambdaNode(ConveyMap1, compose.InvokableLambda(newLambda2))
+	}
 	_ = g.AddEdge(compose.START, ConveyMap)
 	_ = g.AddEdge(ChatModel2, compose.END)
 	_ = g.AddEdge(SearchTemplate, agent)
