@@ -120,7 +120,7 @@ func (impl *ToolImpl) InvokableRun(ctx context.Context, argumentsInJSON string, 
 	sources := make([]string, 0, len(searchResp.Results))
 
 	for _, result := range searchResp.Results {
-		log.Printf("正在加载网页内容: %s", result.Link)
+		log.Printf("正在加载网页内容: \n%s", result.Link)
 		docs := extractMainContent(result.Link)
 		if docs != "" {
 			sources = append(sources, docs)

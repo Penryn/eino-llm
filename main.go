@@ -100,15 +100,14 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			} else {
 				history = BackendHistory
 			}
-			for _, h := range history {
-				content := h.Content
-				if h.Role == "assistant" {
-					content = "[历史记录] " + content
-				}
-				if err := conn.WriteMessage(websocket.TextMessage, []byte(content)); err != nil {
-					log.Printf("发送历史记录失败: %v", err)
-					break
-				}
+			historyJSON, err := json.Marshal(history)
+			if err != nil {
+				log.Printf("序列化历史记录失败: %v", err)
+				break
+			}
+			if err := conn.WriteMessage(websocket.TextMessage, []byte("[历史记录]"+string(historyJSON))); err != nil {
+				log.Printf("发送历史记录失败: %v", err)
+				break
 			}
 		case "message":
 			// 处理消息
